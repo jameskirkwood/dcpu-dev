@@ -17,7 +17,7 @@ patterns:
     '2':
       name: entity.name.function.preprocessor.dcpub
   end: $
-  name: meta.preprocessor.dcpub
+  name: meta.preprocessor.other.dcpub
   patterns:
   - include: '#comments'
 
@@ -27,6 +27,7 @@ patterns:
     '1':
       name: keyword.preprocessor.dcpub
   end: $
+  name: meta.preprocessor.endif.dcpub
   patterns:
   - include: '#comments'
 
@@ -38,6 +39,7 @@ patterns:
     '2':
       name: string.unquoted.include-path.dcpub
   end: $
+  name: meta.preprocessor.include.dcpub
   patterns:
   - include: '#comments'
 
@@ -49,6 +51,7 @@ patterns:
     '2':
       name: entity.name.function.preprocessor.dcpub
   end: $
+  name: meta.preprocessor.define.dcpub
   patterns:
   - include: '#expression'
   - include: '#comments'
@@ -89,13 +92,10 @@ patterns:
   - include: '#comments'
   - include: '#cast'
 
-- comment: label (heuristic means of distinguishing them from casts)
-  match: (?:(?<=\{|;|^)\s*)(:\s*[A-Za-z\_]\w*)
-  captures:
-    '1':
-      name: constant.other.label.dcpub
+- comment: label
+  include: '#label'
 
-- comment: assembly block (currently assembly is lumped together into a 'string')
+- comment: assembly block
   begin: \b(asm)\s*\(
   beginCaptures:
     '1':
@@ -113,7 +113,9 @@ patterns:
   - include: '#expression'
   - begin: (?<=\{)
     end: (?=\})
-    name: string.other.asm.dcpub
+    name: meta.inline-asm.dcpub
+    patterns:
+    - include: '#inline-asm'
 
 - comment: assignments and function calls
   include: '#expression'
@@ -147,6 +149,11 @@ repository:
       match: \\([abtnvfr"'\\ \n]|[0-7]{,2}|u\h{,4}|U\h{,8}|x\h{,2})
       name: constant.character.escape.dcpub
 
+  numeric-literal:
+    patterns:
+    - match: \b(0[Xx][0-9a-fA-F]+|0[Bb][01]+|[0-9]+)\b
+      name: constant.numeric.dcpub
+
   expression:
     patterns:
 
@@ -161,8 +168,7 @@ repository:
 
     - include: '#cast'
 
-    - match: \b(0[Xx][0-9a-fA-F]+|0[Bb][01]+|[0-9]+)\b
-      name: constant.numeric.dcpub
+    - include: '#numeric-literal'
 
     - begin: \"
       end: \"
@@ -178,4 +184,26 @@ repository:
 
     - match: (([*+\-&|^=!]|-?[></%]|<<|>>)=?)
       name: keyword.operator.dcpub
+
+  label:
+    patterns:
+    - comment: (hack to avoid matching type casts within statements - ideally keyword matchers would consume entire statements)
+      match: (?:(?<=\{|;|^)\s*)(:\s*[A-Za-z\_]\w*)
+      captures:
+        '1':
+          name: constant.other.label.dcpub
+
+  inline-asm:
+    patterns:
+    - include: '#comments'
+    - include: '#numeric-literal'
+    - include: '#label'
+    - match: \b([a-zA-Z]{3})\b
+      captures:
+        '1':
+          name: keyword.other.asm-mnemonic.dcpub
+    - match: \b([ABCXYZIJabcxyzij]|PC|pc|SP|sp|EX|ex|IA|ia|PUSH|push|POP|pop|PEEK|peek|PICK|pick)\b
+      captures:
+        '1':
+          name: variable.language.register.dcpub
 ...

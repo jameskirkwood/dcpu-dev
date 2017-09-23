@@ -35,7 +35,7 @@
 			<key>end</key>
 			<string>$</string>
 			<key>name</key>
-			<string>meta.preprocessor.dcpub</string>
+			<string>meta.preprocessor.other.dcpub</string>
 			<key>patterns</key>
 			<array>
 				<dict>
@@ -59,6 +59,8 @@
 			<string>preprocessor directives with no arguments</string>
 			<key>end</key>
 			<string>$</string>
+			<key>name</key>
+			<string>meta.preprocessor.endif.dcpub</string>
 			<key>patterns</key>
 			<array>
 				<dict>
@@ -87,6 +89,8 @@
 			<string>include preprocessor directive</string>
 			<key>end</key>
 			<string>$</string>
+			<key>name</key>
+			<string>meta.preprocessor.include.dcpub</string>
 			<key>patterns</key>
 			<array>
 				<dict>
@@ -115,6 +119,8 @@
 			<string>define preprocessor directive</string>
 			<key>end</key>
 			<string>$</string>
+			<key>name</key>
+			<string>meta.preprocessor.define.dcpub</string>
 			<key>patterns</key>
 			<array>
 				<dict>
@@ -218,18 +224,10 @@
 			</array>
 		</dict>
 		<dict>
-			<key>captures</key>
-			<dict>
-				<key>1</key>
-				<dict>
-					<key>name</key>
-					<string>constant.other.label.dcpub</string>
-				</dict>
-			</dict>
 			<key>comment</key>
-			<string>label (heuristic means of distinguishing them from casts)</string>
-			<key>match</key>
-			<string>(?:(?&lt;=\{|;|^)\s*)(:\s*[A-Za-z\_]\w*)</string>
+			<string>label</string>
+			<key>include</key>
+			<string>#label</string>
 		</dict>
 		<dict>
 			<key>begin</key>
@@ -243,7 +241,7 @@
 				</dict>
 			</dict>
 			<key>comment</key>
-			<string>assembly block (currently assembly is lumped together into a 'string')</string>
+			<string>assembly block</string>
 			<key>end</key>
 			<string>\}</string>
 			<key>name</key>
@@ -281,7 +279,14 @@
 					<key>end</key>
 					<string>(?=\})</string>
 					<key>name</key>
-					<string>string.other.asm.dcpub</string>
+					<string>meta.inline-asm.dcpub</string>
+					<key>patterns</key>
+					<array>
+						<dict>
+							<key>include</key>
+							<string>#inline-asm</string>
+						</dict>
+					</array>
 				</dict>
 			</array>
 		</dict>
@@ -380,10 +385,8 @@
 					<string>#cast</string>
 				</dict>
 				<dict>
-					<key>match</key>
-					<string>\b(0[Xx][0-9a-fA-F]+|0[Bb][01]+|[0-9]+)\b</string>
-					<key>name</key>
-					<string>constant.numeric.dcpub</string>
+					<key>include</key>
+					<string>#numeric-literal</string>
 				</dict>
 				<dict>
 					<key>begin</key>
@@ -420,6 +423,80 @@
 					<string>(([*+\-&amp;|^=!]|-?[&gt;&lt;/%]|&lt;&lt;|&gt;&gt;)=?)</string>
 					<key>name</key>
 					<string>keyword.operator.dcpub</string>
+				</dict>
+			</array>
+		</dict>
+		<key>inline-asm</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#comments</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#numeric-literal</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#label</string>
+				</dict>
+				<dict>
+					<key>captures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>keyword.other.asm-mnemonic.dcpub</string>
+						</dict>
+					</dict>
+					<key>match</key>
+					<string>\b([a-zA-Z]{3})\b</string>
+				</dict>
+				<dict>
+					<key>captures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>variable.language.register.dcpub</string>
+						</dict>
+					</dict>
+					<key>match</key>
+					<string>\b([ABCXYZIJabcxyzij]|PC|pc|SP|sp|EX|ex|IA|ia|PUSH|push|POP|pop|PEEK|peek|PICK|pick)\b</string>
+				</dict>
+			</array>
+		</dict>
+		<key>label</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>captures</key>
+					<dict>
+						<key>1</key>
+						<dict>
+							<key>name</key>
+							<string>constant.other.label.dcpub</string>
+						</dict>
+					</dict>
+					<key>comment</key>
+					<string>(hack to avoid matching type casts within statements - ideally keyword matchers would consume entire statements)</string>
+					<key>match</key>
+					<string>(?:(?&lt;=\{|;|^)\s*)(:\s*[A-Za-z\_]\w*)</string>
+				</dict>
+			</array>
+		</dict>
+		<key>numeric-literal</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>match</key>
+					<string>\b(0[Xx][0-9a-fA-F]+|0[Bb][01]+|[0-9]+)\b</string>
+					<key>name</key>
+					<string>constant.numeric.dcpub</string>
 				</dict>
 			</array>
 		</dict>
