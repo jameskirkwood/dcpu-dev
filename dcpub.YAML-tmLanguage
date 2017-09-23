@@ -1,0 +1,181 @@
+# [PackageDev] target_format: plist, ext: tmLanguage
+---
+name: DCPUB
+scopeName: source.dcpub
+fileTypes: [b]
+uuid: 65084526-1b13-4763-bde7-6c296b4b7ac4
+
+patterns:
+
+- include: '#comments'
+
+- comment: preprocessor directives with one macro argument
+  begin: ^\s*#\s*(undef|ifdef|ifndef|endif)\s+([A-Za-z\_]\w*)\b
+  beginCaptures:
+    '1':
+      name: keyword.preprocessor.dcpub
+    '2':
+      name: entity.name.function.preprocessor.dcpub
+  end: $
+  name: meta.preprocessor.dcpub
+  patterns:
+  - include: '#comments'
+
+- comment: preprocessor directives with no arguments
+  begin: ^\s*#\s*(endif)\s*$
+  beginCaptures:
+    '1':
+      name: keyword.preprocessor.dcpub
+  end: $
+  patterns:
+  - include: '#comments'
+
+- comment: include preprocessor directive
+  begin: ^\s*#\s*(include)\s+(.*)$
+  beginCaptures:
+    '1':
+      name: keyword.preprocessor.dcpub
+    '2':
+      name: string.unquoted.include-path.dcpub
+  end: $
+  patterns:
+  - include: '#comments'
+
+- comment: define preprocessor directive
+  begin: ^\s*#\s*(define)\s+([A-Za-z\_]\w*)\b
+  beginCaptures:
+    '1':
+      name: keyword.preprocessor.dcpub
+    '2':
+      name: entity.name.function.preprocessor.dcpub
+  end: $
+  patterns:
+  - include: '#expression'
+  - include: '#comments'
+
+- comment: control keyword
+  match: \b(if|else|while|break|return|goto)\b
+  name: keyword.control.dcpub
+
+- comment: variable declaration keyword
+  match: \b(local|static|extern)\b
+  name: storage.modifier.dcpub
+
+- comment: function declaration
+  begin: \b(function)\s+([A-Za-z\_]\w*)\s*\(
+  beginCaptures:
+    '1':
+      name: keyword.other.dcpub
+    '2':
+      name: entity.name.function.dcpub
+  end: \)
+  name: meta.function-declaration.dcpub
+  patterns:
+  - include: '#comments'
+  - include: '#cast'
+  - name: variable.parameter.dcpub
+    match: \b([A-Za-z\_]\w*)\b
+
+- comment: structure declaration
+  begin: \b(struct)\s+([A-Za-z\_]\w*)\b
+  beginCaptures:
+    '1':
+      name: keyword.other.dcpub
+    '2':
+      name: entity.name.type.dcpub
+  end: \}
+  name: meta.structure-declaration.dcpub
+  patterns:
+  - include: '#comments'
+  - include: '#cast'
+
+- comment: label (heuristic means of distinguishing them from casts)
+  match: (?:(?<=\{|;|^)\s*)(:\s*[A-Za-z\_]\w*)
+  captures:
+    '1':
+      name: constant.other.label.dcpub
+
+- comment: assembly block (currently assembly is lumped together into a 'string')
+  begin: \b(asm)\s*\(
+  beginCaptures:
+    '1':
+      name: keyword.other.asm.dcpub
+  end: \}
+  name: meta.asm-block.dcpub
+  patterns:
+  - include: '#comments'
+  - match: \b([ABCXYZIJabcxyzij])\s*(=)
+    captures:
+      '1':
+        name: variable.language.register.dcpub
+      '2':
+        name: keyword.operator.dcpub
+  - include: '#expression'
+  - begin: (?<=\{)
+    end: (?=\})
+    name: string.other.asm.dcpub
+
+- comment: assignments and function calls
+  include: '#expression'
+
+repository:
+
+  comments:
+    patterns:
+    - begin: /\*
+      end: \*/
+      name: comment.block.dcpub
+    - match: \*/.*\n
+      name: invalid.illegal.stray-comment-end.dcpub
+    - match: //.*\n
+      name: comment.line.double-slash.dcpub
+
+  cast:
+    patterns:
+    - match: :\s*([A-Za-z\_]\w*)\b
+      captures:
+        '1':
+          name: storage.type.dcpub
+    - begin: \[
+      end: \]
+      patterns:
+      - include: '#expression'
+
+  string-escaped-char:
+    patterns:
+    - comment: https://github.com/Alxandr/Irony/blob/01f2cdda330db8381d7b2eca088fc6c64992a6dc/Irony/Parsing/Terminals/StringLiteral.cs#L340
+      match: \\([abtnvfr"'\\ \n]|[0-7]{,2}|u\h{,4}|U\h{,8}|x\h{,2})
+      name: constant.character.escape.dcpub
+
+  expression:
+    patterns:
+
+    - match: \b([A-Za-z\_]\w*)\s*\(
+      captures:
+        '1':
+          name: support.function.any-method.dcpub
+      name: meta.function-call.dcpub
+
+    - match: \bsizeof\b
+      name: keyword.operator.sizeof.dcpub
+
+    - include: '#cast'
+
+    - match: \b(0[Xx][0-9a-fA-F]+|0[Bb][01]+|[0-9]+)\b
+      name: constant.numeric.dcpub
+
+    - begin: \"
+      end: \"
+      name: string.quoted.double.dcpub
+      patterns:
+      - include: '#string-escaped-char'
+
+    - begin: \'
+      end: \'
+      name: string.quoted.single.dcpub
+      patterns:
+      - include: '#string-escaped-char'
+
+    - match: (([*+\-&|^=!]|-?[></%]|<<|>>)=?)
+      name: keyword.operator.dcpub
+...
